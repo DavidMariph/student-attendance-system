@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -68,3 +69,36 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+=======
+# Student Attendance System
+
+A responsive React application for tracking student attendance, managing enrollments, and viewing student data.
+
+## Features
+
+- Student enrollment management
+- Attendance tracking by date
+- Department-based organization
+- Responsive dashboard
+- Calendar integration
+
+## Technologies
+
+- React
+- JavaScript
+- CSS3
+
+## Setup
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start the development server: `npm start`
+
+## Screenshots
+
+(You can add screenshots later)
+
+## License
+
+MIT
+>>>>>>> 97c1029990ceb9fbb69053619fc7b19610080fe3
