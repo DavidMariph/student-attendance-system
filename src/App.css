@@ -1,6 +1,9 @@
+/* Remove default styles */
 .App {
   text-align: center;
 }
+/* Add Font Awesome */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
 
 .App-logo {
   height: 40vmin;
