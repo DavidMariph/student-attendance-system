@@ -9,7 +9,7 @@ const Dashboard = () => {
   
   return (
     <div className="dashboard">
-      <h2>Dashboard Overview</h2>
+      <h2>Taita Taveta University Dashboard Overview</h2>
       <div className="stats-container">
         <div className="stat-card">
           <h3>Total Students</h3>

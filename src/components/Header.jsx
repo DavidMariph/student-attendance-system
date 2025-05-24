@@ -5,7 +5,7 @@ const Header = () => {
   return (
     <header className="app-header">
       <div className="header-content">
-        <h1>Student Attendance System</h1>
+        <h1>Taita Taveta University Student Attendance System</h1>
         <div className="header-actions">
           <button className="btn-notification">
             <i className="fas fa-bell"></i>
