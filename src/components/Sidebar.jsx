@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { AppContext } from '../context/AppContext';
+import CalendarView from './CalendarView'; // Adjust path if needed
 
 const Sidebar = () => {
   const { activeTab, setActiveTab } = useContext(AppContext);
@@ -37,8 +38,8 @@ const Sidebar = () => {
       <div className="calendar-integration">
         <h3>Calendar</h3>
         <div className="mini-calendar">
-          {/* Calendar integration would go here */}
-          <p>Calendar integration placeholder</p>
+          < CalendarView />
+          
         </div>
       </div>
     </aside>
