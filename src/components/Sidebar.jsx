@@ -39,7 +39,8 @@ const Sidebar = () => {
         <h3>Calendar</h3>
         <div className="mini-calendar">
           < CalendarView />
-          
+
+
         </div>
       </div>
     </aside>
