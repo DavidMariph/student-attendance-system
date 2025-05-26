@@ -5,8 +5,7 @@ const Enrollment = () => {
   const { addStudent } = useContext(AppContext);
   const [formData, setFormData] = useState({
     name: '',
-    department: 'Computer Science',
-    attendance: 0
+    department: 'Computer Science'
   });
 
   // Handle form changes
@@ -32,7 +31,7 @@ const Enrollment = () => {
     const newStudent = {
       ...formData,
       id: Date.now(), // Unique ID based on timestamp
-      attendance: parseInt(formData.attendance),
+      attendance: 0, // Default attendance set to 0
       email: generateEmail(formData.name)
     };
     
@@ -41,8 +40,7 @@ const Enrollment = () => {
     // Reset form
     setFormData({
       name: '',
-      department: 'Computer Science',
-      attendance: 0
+      department: 'Computer Science'
     });
     
     alert(`${newStudent.name} enrolled successfully!`);
@@ -80,19 +78,6 @@ const Enrollment = () => {
             <option value="Civil Engineering">Civil Engineering</option>
             <option value="Business Administration">Business Administration</option>
           </select>
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="attendance">Initial Attendance (%):</label>
-          <input 
-            type="number" 
-            id="attendance" 
-            name="attendance" 
-            min="0" 
-            max="100" 
-            value={formData.attendance}
-            onChange={handleChange}
-          />
         </div>
         
         <button type="submit" className="btn-primary">Enroll Student</button>
