@@ -1,5 +1,6 @@
-import React from 'react';
-import { AppProvider, AppContext } from './context/AppContext';
+import React, { useContext } from 'react';
+import { AppContext } from './context/AppContext';
+import { AppProvider } from './context/AppContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -25,7 +26,7 @@ function App() {
 }
 
 function MainContent() {
-  const { activeTab } = React.useContext(AppContext);
+  const { activeTab } = useContext(AppContext);  // Using useContext directly
   
   return (
     <div className="content-area">
