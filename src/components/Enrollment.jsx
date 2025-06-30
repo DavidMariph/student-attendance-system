@@ -37,6 +37,9 @@ const Enrollment = () => {
       >
         <option value="Computer Science">Computer Science</option>
         <option value="Electrical Engineering">Electrical Engineering</option>
+        <option value="Hospitality">Hospitality</option>
+        <option value="Building Engineering">Building Engineering</option>
+        <option value="Applied science">Applied science</option>
       </select>
       <button type="submit">Enroll Student</button>
     </form>

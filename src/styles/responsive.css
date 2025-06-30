@@ -97,3 +97,23 @@
     border-radius: 5px;
   }
 }
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  
+  .attendance-table {
+    font-size: 12px;
+  }
+  
+  .form-group input, 
+  .form-group select {
+    padding: 8px;
+  }
+}
