@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { AppContext } from '../context/AppContext';
 import './Dashboard.css';
 
@@ -11,6 +11,8 @@ const Dashboard = () => {
     program: '',
     attendance: 0
   });
+  const [weeklyAttendance, setWeeklyAttendance] = useState([]);
+  const [selectedWeek, setSelectedWeek] = useState(0); // 0 = current week, -1 = previous week, etc.
   
   const totalStudents = students.length;
   const avgAttendance = students.reduce((sum, student) => sum + student.attendance, 0) / totalStudents || 0;
@@ -20,6 +22,76 @@ const Dashboard = () => {
     return enrollmentDate >= thirtyDaysAgo;
   }).length;
   
+  // Memoize the calculateWeeklyAttendance function with useCallback
+  const calculateWeeklyAttendance = useCallback((weekOffset) => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1 + (weekOffset * 7)); // Monday of selected week
+    
+    // Initialize attendance by day
+    const attendanceByDay = {};
+    for (let i = 0; i < 5; i++) { // Only weekdays
+      const dayDate = new Date(startOfWeek);
+      dayDate.setDate(startOfWeek.getDate() + i);
+      const dayName = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'][i];
+      attendanceByDay[dayName] = [];
+    }
+    
+    // For this demo, we'll simulate attendance data based on student records
+    students.forEach(student => {
+      // Simulate attendance for each day of the week
+      for (let i = 0; i < 5; i++) {
+        const dayName = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'][i];
+        // Randomize attendance for demo purposes (between 70-100% of student's attendance)
+        const dayAttendance = Math.round(student.attendance * (0.7 + Math.random() * 0.3));
+        attendanceByDay[dayName].push(dayAttendance);
+      }
+    });
+    
+    // Calculate averages for each day
+    const weeklyAverages = Object.keys(attendanceByDay).map(day => {
+      const attendances = attendanceByDay[day];
+      const average = attendances.length > 0 
+        ? attendances.reduce((sum, value) => sum + value, 0) / attendances.length
+        : null;
+      
+      return {
+        day,
+        attendance: average !== null ? Math.round(average) : null
+      };
+    });
+    
+    setWeeklyAttendance(weeklyAverages);
+  }, [students]); // Add students as dependency since it's used inside the function
+
+  // Calculate weekly attendance when component mounts or selectedWeek changes
+  useEffect(() => {
+    calculateWeeklyAttendance(selectedWeek);
+  }, [selectedWeek, calculateWeeklyAttendance]); // Now include calculateWeeklyAttendance in dependencies
+  
+  // Get week label for display
+  const getWeekLabel = (offset) => {
+    if (offset === 0) return "This Week";
+    if (offset === -1) return "Last Week";
+    if (offset === -2) return "Two Weeks Ago";
+    return `${Math.abs(offset)} Weeks Ago`;
+  };
+
+  // Top programs by enrollment
+  const topPrograms = [
+    { name: 'Computer Science', enrollment: 240, color: '#FF6B6B' },
+    { name: 'Engineering', enrollment: 180, color: '#4ECDC4' },
+    { name: 'Business', enrollment: 150, color: '#FFE66D' },
+    { name: 'Education', enrollment: 120, color: '#6A0572' }
+  ];
+  
+  // Recent announcements
+  const announcements = [
+    { id: 1, title: 'Semester Break', date: '2023-12-15', content: 'The semester break will begin on December 20th.' },
+    { id: 2, title: 'New Library Hours', date: '2023-12-10', content: 'Library hours have been extended for finals week.' },
+    { id: 3, title: 'Graduation Ceremony', date: '2023-12-05', content: 'Graduation ceremony will be held on January 15th.' }
+  ];
+
   // Handle adding a new student
   const handleAddStudent = () => {
     if (newStudent.name && newStudent.id) {
@@ -38,21 +110,19 @@ const Dashboard = () => {
   
   // Handle marking attendance for all students
   const handleMarkAttendance = () => {
-    // This would typically open a modal or navigate to an attendance page
-    // For demonstration, we'll just mark a random attendance for all students
     students.forEach(student => {
-      const randomAttendance = Math.floor(Math.random() * 20) + 80; // Random between 80-100
+      const randomAttendance = Math.floor(Math.random() * 20) + 80;
       markAttendance(student.id, randomAttendance);
     });
+    // Recalculate weekly attendance after marking
+    calculateWeeklyAttendance(selectedWeek);
     alert('Attendance marked for all students!');
   };
   
   // Handle generating a report
   const handleGenerateReport = () => {
-    // Create a simple text report
-    const report = `Taita Taveta University Report\nDate: ${new Date().toLocaleDateString()}\n\nTotal Students: ${totalStudents}\nAverage Attendance: ${avgAttendance.toFixed(1)}%\nNew Enrollments This Month: ${enrolledThisMonth}`;
+    const report = `Taita Taveta University Report\nDate: ${new Date().toLocaleDateString()}\n\nTotal Students: ${totalStudents}\nAverage Attendance: ${avgAttendance.toFixed(1)}%\nNew Enrollments This Month: ${enrolledThisMonth}\n\nWeekly Attendance:\n${weeklyAttendance.map(day => `  ${day.day}: ${day.attendance !== null ? day.attendance + '%' : 'No data'}`).join('\n')}`;
     
-    // Create a downloadable report
     const blob = new Blob([report], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -71,123 +141,212 @@ const Dashboard = () => {
       const eventDate = prompt('Enter event date (YYYY-MM-DD):');
       if (eventDate) {
         alert(`Event "${eventName}" scheduled for ${eventDate}`);
-        // Here you would typically save this to your context or backend
       }
     }
   };
 
-  // Sample data for charts
-  const attendanceData = [
-    { day: 'Mon', attendance: 85 },
-    { day: 'Tue', attendance: 78 },
-    { day: 'Wed', attendance: 92 },
-    { day: 'Thu', attendance: 88 },
-    { day: 'Fri', attendance: 80 }
-  ];
-  
-  const programDistribution = [
-    { program: 'Computer Science', count: 120 },
-    { program: 'Engineering', count: 95 },
-    { program: 'Business', count: 85 },
-    { program: 'Education', count: 65 }
-  ];
-
   return (
     <div className="dashboard">
       <header className="dashboard-header">
-        <h1>Taita Taveta University Dashboard</h1>
-        <div className="date-filter">
-          <select>
-            <option>Last 7 days</option>
-            <option>Last 30 days</option>
-            <option>Last 90 days</option>
-          </select>
+        <div className="header-content">
+          <h1>Taita Taveta University Dashboard</h1>
+          <p>Welcome to your university management portal</p>
+        </div>
+        <div className="header-actions">
+          <div className="date-filter">
+            <i className="fas fa-calendar"></i>
+            <select>
+              <option>Last 7 days</option>
+              <option>Last 30 days</option>
+              <option>Last 90 days</option>
+            </select>
+          </div>
+          <button className="notification-btn">
+            <i className="fas fa-bell"></i>
+            <span className="notification-badge">3</span>
+          </button>
+          <div className="user-profile">
+            <div className="avatar">AD</div>
+            <span>Admin</span>
+          </div>
         </div>
       </header>
       
       <div className="stats-grid">
-        <div className="stat-card">
+        <div className="stat-card primary">
           <div className="stat-icon">
             <i className="fas fa-users"></i>
           </div>
           <div className="stat-content">
             <h3>Total Students</h3>
             <p className="stat-number">{totalStudents}</p>
+            <div className="progress-container">
+              <div className="progress-bar" style={{width: '75%'}}></div>
+            </div>
             <p className="stat-trend positive">+5% from last month</p>
           </div>
         </div>
         
-        <div className="stat-card">
+        <div className="stat-card success">
           <div className="stat-icon">
             <i className="fas fa-user-check"></i>
           </div>
           <div className="stat-content">
             <h3>Average Attendance</h3>
             <p className="stat-number">{avgAttendance.toFixed(1)}%</p>
+            <div className="progress-container">
+              <div className="progress-bar" style={{width: `${avgAttendance}%`}}></div>
+            </div>
             <p className="stat-trend positive">+2% from last week</p>
           </div>
         </div>
         
-        <div className="stat-card">
+        <div className="stat-card warning">
           <div className="stat-icon">
             <i className="fas fa-user-plus"></i>
           </div>
           <div className="stat-content">
             <h3>New Enrollments</h3>
             <p className="stat-number">{enrolledThisMonth}</p>
+            <div className="progress-container">
+              <div className="progress-bar" style={{width: '60%'}}></div>
+            </div>
             <p className="stat-trend positive">+12% from last month</p>
           </div>
         </div>
         
-        <div className="stat-card">
+        <div className="stat-card info">
           <div className="stat-icon">
             <i className="fas fa-calendar-alt"></i>
           </div>
           <div className="stat-content">
             <h3>Upcoming Events</h3>
             <p className="stat-number">3</p>
+            <div className="progress-container">
+              <div className="progress-bar" style={{width: '30%'}}></div>
+            </div>
             <p className="stat-trend">Next: Graduation Ceremony</p>
           </div>
         </div>
       </div>
       
-      <div className="charts-container">
-        <div className="chart-card">
-          <h3>Weekly Attendance Trend</h3>
-          <div className="attendance-chart">
-            {attendanceData.map((item, index) => (
-              <div key={index} className="chart-bar">
-                <div 
-                  className="bar-fill" 
-                  style={{ height: `${item.attendance}%` }}
-                ></div>
-                <span>{item.day}</span>
+      <div className="dashboard-content">
+        <div className="charts-container">
+          <div className="chart-card">
+            <div className="chart-header">
+              <h3>Weekly Attendance Trend</h3>
+              <div className="week-selector">
+                <button 
+                  onClick={() => setSelectedWeek(selectedWeek - 1)}
+                  className="week-nav-btn"
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                <span className="week-label">{getWeekLabel(selectedWeek)}</span>
+                <button 
+                  onClick={() => setSelectedWeek(selectedWeek + 1)}
+                  disabled={selectedWeek === 0}
+                  className="week-nav-btn"
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
               </div>
-            ))}
+            </div>
+            <div className="attendance-chart">
+              {weeklyAttendance.map((item, index) => (
+                <div key={index} className="chart-bar">
+                  <div className="bar-tooltip">
+                    {item.attendance !== null ? `${item.attendance}%` : 'No data'}
+                  </div>
+                  <div 
+                    className="bar-fill" 
+                    style={{ height: item.attendance !== null ? `${item.attendance}%` : '10%' }}
+                    data-empty={item.attendance === null}
+                  ></div>
+                  <span>{item.day}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="chart-card">
+            <div className="chart-header">
+              <h3>Program Distribution</h3>
+              <button className="chart-action-btn">
+                <i className="fas fa-ellipsis-v"></i>
+              </button>
+            </div>
+            <div className="program-chart">
+              {[
+                { program: 'Computer Science', count: 120 },
+                { program: 'Engineering', count: 95 },
+                { program: 'Business', count: 85 },
+                { program: 'Education', count: 65 }
+              ].map((item, index) => {
+                const percentage = totalStudents > 0 ? (item.count / totalStudents * 100).toFixed(1) : 0;
+                return (
+                  <div key={index} className="program-item">
+                    <div className="program-info">
+                      <span className="program-name">{item.program}</span>
+                      <span className="program-count">{item.count} students</span>
+                    </div>
+                    <div className="program-bar">
+                      <div 
+                        className="program-fill" 
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                    <span className="program-percentage">{percentage}%</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
         
-        <div className="chart-card">
-          <h3>Program Distribution</h3>
-          <div className="program-chart">
-            {programDistribution.map((item, index) => {
-              const percentage = totalStudents > 0 ? (item.count / totalStudents * 100).toFixed(1) : 0;
-              return (
-                <div key={index} className="program-item">
-                  <div className="program-info">
-                    <span className="program-name">{item.program}</span>
-                    <span className="program-count">{item.count} students</span>
+        <div className="side-panel">
+          <div className="announcements-card">
+            <div className="card-header">
+              <h3>Announcements</h3>
+              <button className="see-all-btn">See All</button>
+            </div>
+            <div className="announcements-list">
+              {announcements.map(announcement => (
+                <div key={announcement.id} className="announcement-item">
+                  <div className="announcement-badge"></div>
+                  <div className="announcement-content">
+                    <h4>{announcement.title}</h4>
+                    <p>{announcement.content}</p>
+                    <span className="announcement-date">{announcement.date}</span>
                   </div>
-                  <div className="program-bar">
-                    <div 
-                      className="program-fill" 
-                      style={{ width: `${percentage}%` }}
-                    ></div>
-                  </div>
-                  <span className="program-percentage">{percentage}%</span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
+          </div>
+          
+          <div className="programs-card">
+            <div className="card-header">
+              <h3>Top Programs</h3>
+            </div>
+            <div className="programs-list">
+              {topPrograms.map((program, index) => (
+                <div key={index} className="program-item-circle">
+                  <div className="program-circle">
+                    <div 
+                      className="circle-progress" 
+                      style={{
+                        background: `conic-gradient(${program.color} ${program.enrollment/10}%, #f0f0f0 0)`
+                      }}
+                    >
+                      <div className="circle-inner">
+                        <span>{program.enrollment}</span>
+                      </div>
+                    </div>
+                    <span className="program-name">{program.name}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -196,20 +355,28 @@ const Dashboard = () => {
         <h3>Quick Actions</h3>
         <div className="action-buttons">
           <button className="action-btn" onClick={() => setShowAddStudent(true)}>
-            <i className="fas fa-plus"></i>
-            Add New Student
+            <div className="action-icon">
+              <i className="fas fa-plus"></i>
+            </div>
+            <span>Add New Student</span>
           </button>
           <button className="action-btn" onClick={handleMarkAttendance}>
-            <i className="fas fa-clipboard-check"></i>
-            Mark Attendance
+            <div className="action-icon">
+              <i className="fas fa-clipboard-check"></i>
+            </div>
+            <span>Mark Attendance</span>
           </button>
           <button className="action-btn" onClick={handleGenerateReport}>
-            <i className="fas fa-chart-line"></i>
-            Generate Report
+            <div className="action-icon">
+              <i className="fas fa-chart-line"></i>
+            </div>
+            <span>Generate Report</span>
           </button>
           <button className="action-btn" onClick={handleScheduleEvent}>
-            <i className="fas fa-calendar-plus"></i>
-            Schedule Event
+            <div className="action-icon">
+              <i className="fas fa-calendar-plus"></i>
+            </div>
+            <span>Schedule Event</span>
           </button>
         </div>
       </div>
@@ -218,35 +385,46 @@ const Dashboard = () => {
       {showAddStudent && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Add New Student</h3>
-            <div className="form-group">
-              <label>Full Name *</label>
-              <input 
-                type="text" 
-                value={newStudent.name}
-                onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
-                placeholder="Enter student name"
-              />
+            <div className="modal-header">
+              <h3>Add New Student</h3>
+              <button className="modal-close" onClick={() => setShowAddStudent(false)}>
+                <i className="fas fa-times"></i>
+              </button>
             </div>
-            <div className="form-group">
-              <label>Student ID *</label>
-              <input 
-                type="text" 
-                value={newStudent.id}
-                onChange={(e) => setNewStudent({...newStudent, id: e.target.value})}
-                placeholder="Enter student ID"
-              />
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Full Name *</label>
+                <input 
+                  type="text" 
+                  value={newStudent.name}
+                  onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
+                  placeholder="Enter student name"
+                />
+              </div>
+              <div className="form-group">
+                <label>Student ID *</label>
+                <input 
+                  type="text" 
+                  value={newStudent.id}
+                  onChange={(e) => setNewStudent({...newStudent, id: e.target.value})}
+                  placeholder="Enter student ID"
+                />
+              </div>
+              <div className="form-group">
+                <label>Program</label>
+                <select
+                  value={newStudent.program}
+                  onChange={(e) => setNewStudent({...newStudent, program: e.target.value})}
+                >
+                  <option value="">Select a program</option>
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Business">Business</option>
+                  <option value="Education">Education</option>
+                </select>
+              </div>
             </div>
-            <div className="form-group">
-              <label>Program</label>
-              <input 
-                type="text" 
-                value={newStudent.program}
-                onChange={(e) => setNewStudent({...newStudent, program: e.target.value})}
-                placeholder="Enter program"
-              />
-            </div>
-            <div className="modal-actions">
+            <div className="modal-footer">
               <button className="btn-secondary" onClick={() => setShowAddStudent(false)}>
                 Cancel
               </button>
