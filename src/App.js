@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import Attendance from './components/Attendance';
 import Enrollment from './components/Enrollment';
 import StudentList from './components/StudentList';
+import AdminLogin from './components/AdminLogin'; 
 import './App.css';
 import './styles/main.css';
 import './styles/responsive.css';
@@ -26,14 +27,15 @@ function App() {
 }
 
 function MainContent() {
-  const { activeTab } = useContext(AppContext);  // Using useContext directly
-  
+  const { activeTab } = useContext(AppContext);
+
   return (
     <div className="content-area">
       {activeTab === 'dashboard' && <Dashboard />}
       {activeTab === 'attendance' && <Attendance />}
       {activeTab === 'enrollment' && <Enrollment />}
       {activeTab === 'students' && <StudentList />}
+      {activeTab === 'admin-login' && <AdminLogin />} 
     </div>
   );
 }
